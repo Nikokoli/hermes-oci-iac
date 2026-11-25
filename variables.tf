@@ -39,8 +39,14 @@ variable "availability_domain" {
 
 variable "shape" {
   type        = string
-  default     = "VM.Standard2.1"
-  description = "Compute shape for the Hermes instance"
+  default     = "VM.Standard.E2.1.Micro"
+  description = <<-EOT
+    Compute shape for the Hermes instance. The default, VM.Standard.E2.1.Micro,
+    is the OCI Always Free AMD shape (1 OCPU, 1 GB RAM). Set another fixed shape
+    (for example VM.Standard2.1) for more memory. Flexible shapes are not
+    supported because no shape_config is set. The shape must be compatible with
+    the image in image_ocid; this is checked when you run terraform plan.
+  EOT
 }
 
 variable "image_ocid" {
