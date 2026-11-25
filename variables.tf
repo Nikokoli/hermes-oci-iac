@@ -59,3 +59,15 @@ variable "tags" {
   default     = {}
   description = "Additional tags applied to all resources"
 }
+
+variable "create_swap" {
+  type        = bool
+  default     = true
+  description = "Whether to create and activate a swap file on the instance at boot (via cloud-init)."
+}
+
+variable "swap_size_gb" {
+  type        = number
+  default     = 4
+  description = "Swap file size in GiB when create_swap is true (issue #2 requests 4 GiB for OCI Micro 1 GB RAM)."
+}

@@ -165,6 +165,14 @@ resource "oci_core_instance" "hermes" {
         - curl -fsSL https://github.com/cli/cli/releases/download/v2.97.0/gh_2.97.0_linux_amd64.tar.gz -o /tmp/gh.tar.gz
         - tar -xzf /tmp/gh.tar.gz -C /tmp --strip-components=2 gh_2.97.0_linux_amd64/bin/gh
         - install -m 0755 /tmp/gh_2.97.0_linux_amd64/bin/gh /home/ubuntu/.hermes/.local/bin/gh
+        - |
+          if [ "${var.create_swap}" = "true" ]; then
+            fallocate -l ${var.swap_size_gb}G /swapfile
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+          fi
     EOF
   }
 
