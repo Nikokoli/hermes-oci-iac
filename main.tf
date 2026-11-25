@@ -10,7 +10,6 @@
 
 provider "oci" {
   tenancy_ocid     = var.tenancy_ocid
-  compartment_ocid = var.compartment_ocid
   user_ocid        = var.user_ocid
   fingerprint      = var.fingerprint
   private_key_path = var.private_key_path
@@ -24,7 +23,7 @@ resource "oci_core_vcn" "hermes" {
   display_name   = "hermes-vcn"
   dns_label      = "hermesvcn"
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
@@ -33,9 +32,9 @@ resource "oci_core_internet_gateway" "hermes" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.hermes.id
   display_name   = "hermes-ig"
-  is_enabled     = true
+  enabled        = true
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
@@ -44,15 +43,13 @@ resource "oci_core_route_table" "hermes" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.hermes.id
   display_name   = "hermes-rt"
-  route_rules    = [
-    {
-      network_entity_id = oci_core_internet_gateway.hermes.id
-      destination       = "0.0.0.0/0"
-      destination_type  = "CIDR_BLOCK"
-    },
-  ]
+  route_rules {
+    network_entity_id = oci_core_internet_gateway.hermes.id
+    destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+  }
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
@@ -62,57 +59,58 @@ resource "oci_core_security_list" "hermes" {
   vcn_id         = oci_core_vcn.hermes.id
   display_name   = "hermes-sl"
 
-  ingress_security_rules = [
-    # SSH
-    {
-      protocol    = "6"
-      source      = "0.0.0.0/0"
-      stateless   = false
-      tcp_options = { min = 22, max = 22 }
-      description = "SSH"
-    },
-    # Hermes web UI / API (adjust ports to your setup)
-    {
-      protocol    = "6"
-      source      = "0.0.0.0/0"
-      stateless   = false
-      tcp_options = { min = 80, max = 80 }
-      description = "HTTP"
-    },
-    {
-      protocol    = "6"
-      source      = "0.0.0.0/0"
-      stateless   = false
-      tcp_options = { min = 443, max = 443 }
-      description = "HTTPS"
-    },
-  ]
-  egress_security_rules = [
-    {
-      protocol    = "all"
-      source      = "0.0.0.0/0"
-      stateless   = false
-      description = "All outbound"
-    },
-  ]
+  ingress_security_rules {
+    protocol  = "6"
+    source    = "0.0.0.0/0"
+    stateless = false
+    tcp_options {
+      min = 22
+      max = 22
+    }
+    description = "SSH"
+  }
+  ingress_security_rules {
+    protocol  = "6"
+    source    = "0.0.0.0/0"
+    stateless = false
+    tcp_options {
+      min = 80
+      max = 80
+    }
+    description = "HTTP"
+  }
+  ingress_security_rules {
+    protocol  = "6"
+    source    = "0.0.0.0/0"
+    stateless = false
+    tcp_options {
+      min = 443
+      max = 443
+    }
+    description = "HTTPS"
+  }
+  egress_security_rules {
+    protocol    = "all"
+    destination = "0.0.0.0/0"
+    stateless   = false
+    description = "All outbound"
+  }
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
 
 resource "oci_core_subnet" "hermes" {
-  compartment_id       = var.compartment_ocid
-  vcn_id               = oci_core_vcn.hermes.id
-  cidr_block           = "10.0.1.0/24"
-  display_name         = "hermes-subnet"
-  prohibition_ingress  = false
-  prohibition_egress   = false
-  route_table_id       = oci_core_route_table.hermes.id
-  security_list_ids    = [oci_core_security_list.hermes.id]
-  dns_label            = "hermessubnet"
+  compartment_id    = var.compartment_ocid
+  vcn_id            = oci_core_vcn.hermes.id
+  cidr_block        = "10.0.1.0/24"
+  display_name      = "hermes-subnet"
+  route_table_id    = oci_core_route_table.hermes.id
+  security_list_ids = [oci_core_security_list.hermes.id]
+  dns_label         = "hermessubnet"
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
@@ -121,16 +119,6 @@ resource "oci_core_subnet" "hermes" {
 resource "tls_private_key" "hermes_ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
-}
-
-resource "oci_core_key" "hermes_ssh" {
-  compartment_id = var.compartment_ocid
-  display_name   = "hermes-ssh-key"
-  public_key     = tls_private_key.hermes_ssh.public_key_openssh
-
-  tags = {
-    Project = "hermes"
-  }
 }
 
 # ------------------------------------------------------------ Compute -----
@@ -146,10 +134,10 @@ resource "oci_core_instance" "hermes" {
   }
 
   create_vnic_details {
-    subnet_id         = oci_core_subnet.hermes.id
-    assign_public_ip  = true
-    display_name      = "hermes-vnic"
-    hostname_label    = "hermes"
+    subnet_id              = oci_core_subnet.hermes.id
+    assign_public_ip       = true
+    display_name           = "hermes-vnic"
+    hostname_label         = "hermes"
     skip_source_dest_check = false
   }
 
@@ -168,7 +156,7 @@ resource "oci_core_instance" "hermes" {
     EOF
   }
 
-  tags = {
+  freeform_tags = {
     Project = "hermes"
   }
 }
