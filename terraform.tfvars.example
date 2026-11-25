@@ -9,5 +9,7 @@ private_key_path = "/home/ubuntu/.oci/api_key.pem"
 region           = "us-ashburn-1"
 
 availability_domain = "HukT:PHX-AD-1"
-shape               = "VM.Standard2.1"
+# Default is the Always Free Micro shape (1 OCPU, 1 GB RAM). For more memory use
+# a larger fixed shape, e.g. "VM.Standard2.1". The image must support the shape.
+shape               = "VM.Standard.E2.1.Micro"
 image_ocid          = "ocid1.image.oc1.phx.xxxxx"

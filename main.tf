@@ -122,11 +122,30 @@ resource "tls_private_key" "hermes_ssh" {
 }
 
 # ------------------------------------------------------------ Compute -----
+# Shapes the chosen image can run on. Used to reject an incompatible
+# image/shape pair (for example a Micro-incompatible image) at plan time.
+data "oci_core_image_shapes" "hermes" {
+  image_id = var.image_ocid
+}
+
+locals {
+  image_compatible_shapes = [
+    for c in data.oci_core_image_shapes.hermes.image_shape_compatibilities : c.shape
+  ]
+}
+
 resource "oci_core_instance" "hermes" {
   availability_domain = var.availability_domain
   compartment_id      = var.compartment_ocid
   display_name        = "hermes-instance"
   shape               = var.shape
+
+  lifecycle {
+    precondition {
+      condition     = contains(local.image_compatible_shapes, var.shape)
+      error_message = "Shape ${var.shape} is not compatible with image ${var.image_ocid}. Choose an image that supports this shape, or set var.shape to one of: ${join(", ", local.image_compatible_shapes)}."
+    }
+  }
 
   source_details {
     source_type = "image"
