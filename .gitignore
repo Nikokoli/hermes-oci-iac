@@ -1,0 +1,20 @@
+# Local terraform values (secrets)
+terraform.tfvars
+terraform.tfvars.json
+*.tfvars
+
+# Generated state and plans
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# Crash log
+crash.log
+
+# Ignore generated private key output if saved locally
+*.pem
+*.key
+
+# OS
+.DS_Store
