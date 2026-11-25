@@ -32,3 +32,13 @@ output "gh_config_path" {
   value       = "/home/ubuntu/.config/gh"
   description = "Directory where the gh CLI stores its auth config on the instance"
 }
+
+output "swap_created" {
+  value       = var.create_swap
+  description = "Whether a swap file was configured on the instance"
+}
+
+output "swap_size_gb" {
+  value       = var.swap_size_gb
+  description = "Swap file size in GiB configured on the instance"
+}

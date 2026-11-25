@@ -11,3 +11,6 @@ region           = "us-ashburn-1"
 availability_domain = "HukT:PHX-AD-1"
 shape               = "VM.Standard2.1"
 image_ocid          = "ocid1.image.oc1.phx.xxxxx"
+
+create_swap   = true
+swap_size_gb  = 4
