@@ -165,7 +165,33 @@ resource "oci_core_instance" "hermes" {
         - curl -fsSL https://github.com/cli/cli/releases/download/v2.97.0/gh_2.97.0_linux_amd64.tar.gz -o /tmp/gh.tar.gz
         - tar -xzf /tmp/gh.tar.gz -C /tmp --strip-components=2 gh_2.97.0_linux_amd64/bin/gh
         - install -m 0755 /tmp/gh_2.97.0_linux_amd64/bin/gh /home/ubuntu/.hermes/.local/bin/gh
-    EOF
+        - runuser -u ubuntu -- bash -lc 'curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash'
+        - |
+          HERMES_BIN=$(runuser -u ubuntu -- bash -lc 'command -v hermes 2>/dev/null || echo /home/ubuntu/.local/bin/hermes')
+          cat > /etc/systemd/system/hermes-agent.service <<EOF
+          [Unit]
+          Description=Hermes Agent
+          After=network.target
+          [Service]
+          Type=simple
+          User=ubuntu
+          WorkingDirectory=/home/ubuntu
+          Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+          ExecStart=$HERMES_BIN
+          Restart=on-failure
+          RestartSec=10
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+          systemctl daemon-reload
+          systemctl enable --now hermes-agent.service
+        - |
+          if /home/ubuntu/.hermes/.local/bin/gh auth status >/dev/null 2>&1; then
+            runuser -u ubuntu -- bash -lc '/home/ubuntu/.hermes/.local/bin/gh auth setup-git'
+            runuser -u ubuntu -- bash -lc 'git config --global user.name "$$(/home/ubuntu/.hermes/.local/bin/gh api user --jq ".name // .login")"'
+            runuser -u ubuntu -- bash -lc 'git config --global user.email "$$(/home/ubuntu/.hermes/.local/bin/gh api user --jq ".email")"'
+          fi
+   EOF
   }
 
   tags = {
